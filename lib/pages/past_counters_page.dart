@@ -5,6 +5,7 @@ import 'package:countdown_timer/pages/base_page.dart';
 import 'package:countdown_timer/widget/show_dialog.dart';
 import 'package:countdown_timer/widget/counter_card.dart';
 
+// Geçmiş sayaçları listeleyen sayfa (yalnızca tarihi geçmiş sayaçları gösterir)
 class PastCounters extends StatelessWidget {
   const PastCounters({super.key});
 
@@ -17,79 +18,85 @@ class PastCounters extends StatelessWidget {
       content: user == null
           ? const Center(child: Text('Kullanıcı bulunamadı'))
           : StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .collection('counters')
-            .orderBy('datetime', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+              // Firestore'dan kullanıcının sayaçlarını alır ve zamana göre sıralar
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user.uid)
+                  .collection('counters')
+                  .orderBy('datetime', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          final now = DateTime.now();
-          final counters = snapshot.data!.docs.where((doc) {
-            final datetimeStr = doc['datetime'];
-            final datetime = DateTime.tryParse(datetimeStr);
-            return datetime != null && datetime.isBefore(now);
-          }).toList();
+                final now = DateTime.now();
 
-          if (counters.isEmpty) {
-            return const Center(child: Text('Henüz geçmiş sayaç yok.'));
-          }
+                // Geçmişte kalan sayaçları filtrele
+                final counters = snapshot.data!.docs.where((doc) {
+                  final datetimeStr = doc['datetime'];
+                  final datetime = DateTime.tryParse(datetimeStr);
+                  return datetime != null && datetime.isBefore(now);
+                }).toList();
 
-          return ListView.builder(
-            shrinkWrap: true,
-            itemCount: counters.length,
-            itemBuilder: (context, index) {
-              final counter = counters[index];
-              final title = counter['title'] ?? '';
-              final datetimeStr = counter['datetime'] ?? '';
-              final datetime = DateTime.tryParse(datetimeStr);
+                if (counters.isEmpty) {
+                  return const Center(child: Text('Henüz geçmiş sayaç yok.'));
+                }
 
-              if (datetime == null) return const SizedBox.shrink();
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: counters.length,
+                  itemBuilder: (context, index) {
+                    final counter = counters[index];
+                    final title = counter['title'] ?? '';
+                    final datetimeStr = counter['datetime'] ?? '';
+                    final datetime = DateTime.tryParse(datetimeStr);
 
-              final diff = now.difference(datetime);
+                    if (datetime == null) return const SizedBox.shrink();
 
-              final day = diff.inDays.toString().padLeft(2, '0');
-              final hour = (diff.inHours % 24).toString().padLeft(2, '0');
-              final minute = (diff.inMinutes % 60).toString().padLeft(2, '0');
-              final second = (diff.inSeconds % 60).toString().padLeft(2, '0');
+                    // Geçen süreyi hesapla
+                    final diff = now.difference(datetime);
 
-              final formattedDate = "${datetime.day.toString().padLeft(2, '0')}.${datetime.month.toString().padLeft(2, '0')}.${datetime.year}";
-              final formattedTime = "${datetime.hour.toString().padLeft(2, '0')}:${datetime.minute.toString().padLeft(2, '0')}";
-              final fullDateTime = "$formattedDate - $formattedTime";
+                    final day = diff.inDays.toString().padLeft(2, '0');
+                    final hour = (diff.inHours % 24).toString().padLeft(2, '0');
+                    final minute = (diff.inMinutes % 60).toString().padLeft(2, '0');
+                    final second = (diff.inSeconds % 60).toString().padLeft(2, '0');
 
+                    // Tarihi biçimlendir
+                    final formattedDate =
+                        "${datetime.day.toString().padLeft(2, '0')}.${datetime.month.toString().padLeft(2, '0')}.${datetime.year}";
+                    final formattedTime =
+                        "${datetime.hour.toString().padLeft(2, '0')}:${datetime.minute.toString().padLeft(2, '0')}";
+                    final fullDateTime = "$formattedDate - $formattedTime";
 
-              return CounterCard(
-                title: title,
-                day: day,
-                hour: hour,
-                minute: minute,
-                second: second,
-                date: fullDateTime,
-
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => ShowDialog(
+                    // Sayaç kartı oluştur
+                    return CounterCard(
                       title: title,
-
-                      onDelete: () async {
-                        await counter.reference.delete();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Sayaç silindi')),
+                      day: day,
+                      hour: hour,
+                      minute: minute,
+                      second: second,
+                      date: fullDateTime,
+                      onTap: () {
+                        // Silme işlemi için onTap ile diyalog açılır
+                        showDialog(
+                          context: context,
+                          builder: (context) => ShowDialog(
+                            title: title,
+                            onDelete: () async {
+                              await counter.reference.delete();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Sayaç silindi')),
+                              );
+                            },
+                          ),
                         );
                       },
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
-      ),
+                    );
+                  },
+                );
+              },
+            ),
     );
   }
 }
