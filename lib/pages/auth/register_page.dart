@@ -210,7 +210,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                                         return;
                                       }
 
-                                      if ([email, password, name, province, birthPlace].any((e) => e.isEmpty)) {
+                                      if ([email, password, name, province, birthPlace,numberplate].any((e) => e.isEmpty)) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           const SnackBar(content: Text('Tüm alanları doldurun!')),
                                         );
