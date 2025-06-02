@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:countdown_timer/widget/text_field.dart';
-import 'package:countdown_timer/widget/button.dart';
-import 'package:countdown_timer/widget/date_picker.dart';
-import 'package:countdown_timer/repository/auth_repository.dart';
-import 'package:countdown_timer/bloc/auth_cubit.dart';
-import 'package:countdown_timer/bloc/auth_state.dart'  as my_auth;
+import 'package:countdown_timer/widget/text_field.dart'; // Özel text field bileşeni
+import 'package:countdown_timer/widget/button.dart'; // Özel buton bileşeni
+import 'package:countdown_timer/widget/date_picker.dart'; // Tarih seçici bileşeni
+import 'package:countdown_timer/repository/auth_repository.dart'; // Yetkilendirme işlemlerini yöneten sınıf
+import 'package:countdown_timer/bloc/auth_cubit.dart'; // BLoC Cubit sınıfı (durum yönetimi)
+import 'package:countdown_timer/bloc/auth_state.dart' as my_auth; // AuthState alias'ı
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb;
-import 'package:countdown_timer/service/shared_preferences.dart';
-import 'package:countdown_timer/db/local_db.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb; // Firebase auth
+import 'package:countdown_timer/service/shared_preferences.dart'; // SharedPreferences servisi
+import 'package:countdown_timer/db/local_db.dart'; // Lokal SQLite veritabanı
+import 'package:supabase_flutter/supabase_flutter.dart'; // Supabase veritabanı
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -19,16 +19,18 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterPage> {
+  // Kullanıcıdan veri almak için controller'lar
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _adController = TextEditingController();
   final TextEditingController _ilController = TextEditingController();
   final TextEditingController _plakaController = TextEditingController();
-
   final TextEditingController _dogumYeriController = TextEditingController();
 
+  // Seçilen doğum tarihi
   DateTime selectedDate = DateTime.now();
 
+  // Tarih seçimi değiştiğinde çağrılır
   void onDateSelected(DateTime date) {
     setState(() {
       selectedDate = date;
@@ -38,10 +40,13 @@ class _RegisterScreenState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
+      // AuthCubit ile BLoC sağlayıcı başlatılıyor
       create: (context) => AuthCubit(AuthRepository(auth: fb.FirebaseAuth.instance)),
       child: BlocConsumer<AuthCubit, my_auth.AuthState>(
+        // Durum dinleyici
         listener: (context, state) async {
           if (state is my_auth.SignedUp) {
+            // Kayıt başarılı ise kullanıcı bilgileri işleniyor
             final user = state.userCredential.user;
             if (user != null) {
               final uid = user.uid;
@@ -49,15 +54,17 @@ class _RegisterScreenState extends State<RegisterPage> {
               final name = _adController.text;
               final province = _ilController.text;
               final birthPlace = _dogumYeriController.text;
-              final numberplate=_plakaController.text;
+              final numberplate = _plakaController.text;
               final birthDate = selectedDate.toIso8601String();
 
+              // SharedPreferences'a kaydet
               await SharedPreferencesHelper.saveUserInfo(
                 uid: uid,
                 email: email,
                 name: name,
               );
 
+              // SQLite'e kaydet
               await LocalDb().insertUser(
                 id: uid,
                 name: name,
@@ -65,9 +72,10 @@ class _RegisterScreenState extends State<RegisterPage> {
                 province: province,
                 birthPlace: birthPlace,
                 birthDate: birthDate,
-                  numberplate:numberplate
+                numberplate: numberplate,
               );
 
+              // Supabase'e kaydet
               try {
                 await Supabase.instance.client.from('users').insert({
                   'id': uid,
@@ -76,14 +84,14 @@ class _RegisterScreenState extends State<RegisterPage> {
                   'province': province,
                   'birthPlace': birthPlace,
                   'birthDate': birthDate,
-                  'numberplate':numberplate
-
+                  'numberplate': numberplate,
                 });
                 print('Supabase kayıt başarılı');
               } catch (e) {
                 print('Supabase kayıt hatası: $e');
               }
 
+              // Kullanıcıya bilgi verilir ve giriş ekranına yönlendirilir
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Kayıt başarılı')),
               );
@@ -91,6 +99,7 @@ class _RegisterScreenState extends State<RegisterPage> {
               Navigator.pushReplacementNamed(context, '/login_page');
             }
           } else if (state is my_auth.AuthError) {
+            // Hata durumunda kullanıcıya mesaj gösterilir
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
             );
@@ -113,6 +122,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                // Ad-Soyad alanı
                                 Padding(
                                   padding: const EdgeInsets.all(10),
                                   child: MyTextField(
@@ -121,6 +131,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                                     textt: "Adınız - Soyadınız",
                                   ),
                                 ),
+                                // E-posta ve şifre yan yana
                                 Row(
                                   children: [
                                     Expanded(
@@ -141,12 +152,12 @@ class _RegisterScreenState extends State<RegisterPage> {
                                           controller: _passwordController,
                                           onchanged: (value) {},
                                           isPassword: true,
-                                        )
-
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
+                                // İl alanı
                                 Padding(
                                   padding: const EdgeInsets.all(10),
                                   child: MyTextField(
@@ -155,6 +166,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                                     textt: "Yaşadığınız İl",
                                   ),
                                 ),
+                                // Plaka kodu
                                 Padding(
                                   padding: const EdgeInsets.all(10),
                                   child: MyTextField(
@@ -163,7 +175,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                                     textt: "Yaşadığınız İl Plaka Kodu",
                                   ),
                                 ),
-
+                                // Doğum yeri
                                 Padding(
                                   padding: const EdgeInsets.all(10),
                                   child: MyTextField(
@@ -172,6 +184,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                                     textt: "Doğum Yeri",
                                   ),
                                 ),
+                                // Doğum tarihi seçici
                                 Padding(
                                   padding: const EdgeInsets.all(10),
                                   child: Container(
@@ -192,6 +205,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                                     ),
                                   ),
                                 ),
+                                // Kayıt ol butonu
                                 Padding(
                                   padding: const EdgeInsets.all(10),
                                   child: MyButton(
@@ -201,8 +215,9 @@ class _RegisterScreenState extends State<RegisterPage> {
                                       final name = _adController.text;
                                       final province = _ilController.text;
                                       final birthPlace = _dogumYeriController.text;
-                                      final numberplate=_plakaController.text;
+                                      final numberplate = _plakaController.text;
 
+                                      // E-posta doğrulama
                                       if (!RegExp(r'^[\w.-]+@gmail\.com$').hasMatch(email)) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           const SnackBar(content: Text('@gmail.com uzantılı e-posta giriniz')),
@@ -210,13 +225,15 @@ class _RegisterScreenState extends State<RegisterPage> {
                                         return;
                                       }
 
-                                      if ([email, password, name, province, birthPlace,numberplate].any((e) => e.isEmpty)) {
+                                      // Boş alan kontrolü
+                                      if ([email, password, name, province, birthPlace, numberplate].any((e) => e.isEmpty)) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           const SnackBar(content: Text('Tüm alanları doldurun!')),
                                         );
                                         return;
                                       }
 
+                                      // BLoC cubit ile kayıt işlemi başlatılır
                                       context.read<AuthCubit>().signUp(
                                         name: name,
                                         email: email,
@@ -224,7 +241,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                                         date: selectedDate.toIso8601String(),
                                         province: province,
                                         birthplace: birthPlace,
-                                          numberplate:numberplate
+                                        numberplate: numberplate,
                                       );
                                     },
                                     buttontext: "Kayıt Ol",
@@ -234,6 +251,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                                     height: 60,
                                   ),
                                 ),
+                                // Giriş yap butonu
                                 const Text("Hesabınız Var Mı? ↓", style: TextStyle(color: Color(0xFF666666))),
                                 Padding(
                                   padding: const EdgeInsets.all(10),
