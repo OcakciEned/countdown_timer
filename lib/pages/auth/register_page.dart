@@ -203,7 +203,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                                       final birthPlace = _dogumYeriController.text;
                                       final numberplate=_plakaController.text;
 
-                                      if (!RegExp(r'^[\w-\.]+@gmail\.com$').hasMatch(email)) {
+                                      if (!RegExp(r'^[\w.-]+@gmail\.com$').hasMatch(email)) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           const SnackBar(content: Text('@gmail.com uzantılı e-posta giriniz')),
                                         );
