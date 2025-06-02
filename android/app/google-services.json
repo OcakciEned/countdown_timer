@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "640208226388",
+    "project_id": "countdowntimer-cb736",
+    "storage_bucket": "countdowntimer-cb736.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:640208226388:android:85d3b73139277e1e5fc5c1",
+        "android_client_info": {
+          "package_name": "com.example.countdown_timer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBm1lPPCKzqD5f34QENY_p0Mc9KjNeVYDI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
