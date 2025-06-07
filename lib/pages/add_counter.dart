@@ -7,6 +7,7 @@ import 'package:countdown_timer/widget/time_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Sayaç ekleme ekranını temsil eden StatefulWidget
 class AddCounter extends StatefulWidget {
   const AddCounter({super.key});
 
@@ -15,21 +16,28 @@ class AddCounter extends StatefulWidget {
 }
 
 class _AddCounterState extends State<AddCounter> {
+  // Sayaç adı için kontrolcü
   final TextEditingController _titleController = TextEditingController();
 
+  // Seçilen tarih ve saat
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
+
+  // Tarih seçildiğinde çağrılır
   void onDateSelected(DateTime date) {
     setState(() {
       selectedDate = date;
     });
   }
 
+  // Saat seçildiğinde çağrılır
   void onTimeSelected(TimeOfDay time) {
     setState(() {
       selectedTime = time;
     });
   }
+
+  // Sayaç bilgilerini Firestore'a kaydeden fonksiyon
   Future<void> saveCounter(String title, DateTime dateTime) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -44,11 +52,6 @@ class _AddCounterState extends State<AddCounter> {
       'created_at': FieldValue.serverTimestamp(),
     });
   }
-
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +73,7 @@ class _AddCounterState extends State<AddCounter> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            // Sayaç adı giriş alanı
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                               child: MyTextField(
@@ -79,15 +83,12 @@ class _AddCounterState extends State<AddCounter> {
                               ),
                             ),
 
-
-
-
+                            // Tarih seçici bileşeni
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                                 decoration: BoxDecoration(
-
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(color: Colors.grey),
                                 ),
@@ -103,6 +104,8 @@ class _AddCounterState extends State<AddCounter> {
                                 ),
                               ),
                             ),
+
+                            // Saat seçici bileşeni
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                               child: Container(
@@ -123,11 +126,15 @@ class _AddCounterState extends State<AddCounter> {
                                 ),
                               ),
                             ),
+
+                            // Kaydet butonu
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                               child: MyButton(
                                 buttonclick: () async {
                                   final title = _titleController.text.trim();
+
+                                  // Seçilen tarih ve saat birleştiriliyor
                                   final dateTime = DateTime(
                                     selectedDate.year,
                                     selectedDate.month,
@@ -136,6 +143,7 @@ class _AddCounterState extends State<AddCounter> {
                                     selectedTime.minute,
                                   );
 
+                                  // Sayaç adı boşsa uyarı göster
                                   if (title.isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(content: Text('Sayaç adı giriniz')),
@@ -143,8 +151,10 @@ class _AddCounterState extends State<AddCounter> {
                                     return;
                                   }
 
+                                  // Firestore'a kaydet
                                   await saveCounter(title, dateTime);
 
+                                  // Başarı mesajı göster
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(content: Text('Sayaç kaydedildi!')),
                                   );
@@ -154,16 +164,13 @@ class _AddCounterState extends State<AddCounter> {
                                 backcolor: Colors.blue,
                                 width: 370,
                                 height: 60,
-
                               ),
                             ),
-
                           ],
                         ),
                       ),
                     ),
                   ),
-
                 ],
               ),
             ),

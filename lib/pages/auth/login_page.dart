@@ -1,3 +1,4 @@
+// Gerekli paketlerin içe aktarılması
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,25 +8,31 @@ import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 import 'dart:convert';
+
 import 'package:countdown_timer/widget/text_field.dart';
 import 'package:countdown_timer/widget/button.dart';
 import 'package:countdown_timer/repository/auth_repository.dart';
 import 'package:countdown_timer/bloc/auth_cubit.dart';
 import 'package:countdown_timer/bloc/auth_state.dart';
 
+// Giriş sayfası StatelessWidget olarak tanımlanıyor
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
 
+  // Email ve şifre girişleri için controller'lar
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
 
 
+
+  // GitHub ile giriş işlemi ve kullanıcı kontrolü
   Future<void> signInWithGitHubAndHandle(BuildContext context) async {
     const clientId = 'Ov23liJirU2f6T387Gpu';
     const clientSecret = '3f5cc29a21a3f0170e1e6fcce73af09bf52a8670';
 
     try {
+      // GitHub OAuth ekranına yönlendirme
       final result = await FlutterWebAuth2.authenticate(
         url: 'https://github.com/login/oauth/authorize'
             '?client_id=$clientId'
@@ -34,6 +41,7 @@ class LoginPage extends StatelessWidget {
         callbackUrlScheme: 'myapp',
       );
 
+      // Callback ile gelen kod alınır
       final code = Uri.parse(result).queryParameters['code'];
       if (code == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -42,6 +50,7 @@ class LoginPage extends StatelessWidget {
         return;
       }
 
+      // Kod ile access token alınır
       final tokenResponse = await http.post(
         Uri.parse('https://github.com/login/oauth/access_token'),
         headers: {'Accept': 'application/json'},
@@ -62,6 +71,7 @@ class LoginPage extends StatelessWidget {
         return;
       }
 
+      // Token ile Firebase'e giriş yapılır
       final credential = GithubAuthProvider.credential(accessToken);
       final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
       final user = userCredential.user;
@@ -73,16 +83,13 @@ class LoginPage extends StatelessWidget {
         return;
       }
 
+      // Firestore'da kullanıcı belgesi kontrolü
       final userDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
       final snapshot = await userDoc.get();
 
-      if (!snapshot.exists) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Kullanıcı Firestore\'da bulunamadı.')),
-        );
-        return;
-      }
 
+
+      // Kullanıcı bilgilerinin tamam olup olmadığını kontrol et
       final data = snapshot.data()!;
       final isMissingInfo = (data['province'] ?? '').isEmpty ||
           (data['birthplace'] ?? '').isEmpty ||
@@ -114,9 +121,11 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
+      // AuthCubit tanımlanıyor
       create: (context) => AuthCubit(AuthRepository(auth: FirebaseAuth.instance)),
       child: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
+          // Giriş başarılıysa anasayfaya yönlendir
           if (state is LoggedIn) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Giriş Başarılı')),
@@ -138,6 +147,7 @@ class LoginPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Logo veya tanıtıcı görsel
                       Center(
                         child: Image.asset(
                           'assets/time.png',
@@ -146,20 +156,22 @@ class LoginPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 30),
+                      // Email giriş alanı
                       MyTextField(
                         controller: _emailController,
                         onchanged: (value) {},
                         textt: "E-posta",
                       ),
                       const SizedBox(height: 20),
+                      // Şifre giriş alanı
                       MyTextField(
                         controller: _passwordController,
                         onchanged: (value) {},
                         textt: "Şifre",
                         isPassword: true,
                       ),
-
                       const SizedBox(height: 30),
+                      // Giriş butonu
                       MyButton(
                         buttonclick: () {
                           final email = _emailController.text;
@@ -185,6 +197,7 @@ class LoginPage extends StatelessWidget {
                         'Hesabınız Yok Mu?',
                         textAlign: TextAlign.center,
                       ),
+                      // Kayıt ol butonu
                       MyButton(
                         buttonclick: () {
                           Navigator.pushNamed(context, '/register_page');
@@ -196,9 +209,11 @@ class LoginPage extends StatelessWidget {
                         width: double.infinity,
                       ),
                       const SizedBox(height: 20),
+                      // Sosyal giriş butonları
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
+                          // Google ile giriş
                           MyButton(
                             buttonclick: () async {
                               final repo = AuthRepository(auth: FirebaseAuth.instance);
@@ -236,10 +251,10 @@ class LoginPage extends StatelessWidget {
                           ),
 
                           const SizedBox(width: 70),
+                          // GitHub ile giriş
                           MyButton(
                             buttonclick: () async {
                               await signInWithGitHubAndHandle(context);
-
                             },
                             buttontext: "Github",
                             textcolor: Colors.white,

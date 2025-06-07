@@ -9,7 +9,7 @@ import 'package:countdown_timer/db/local_db.dart';
 import 'package:countdown_timer/pages/profile_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-
+// Kullanıcının eksik bilgilerini doldurması için sayfa
 class missinginfo extends StatefulWidget {
   const missinginfo({super.key});
 
@@ -18,19 +18,22 @@ class missinginfo extends StatefulWidget {
 }
 
 class _missinginfoState extends State<missinginfo> {
+  // Kullanıcıdan alınacak veriler için controller'lar
   final TextEditingController _adController = TextEditingController();
   final TextEditingController _ilController = TextEditingController();
   final TextEditingController _dogumYeriController = TextEditingController();
   final TextEditingController _plakaController = TextEditingController();
 
+  // Seçilen doğum tarihi
   DateTime selectedDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _loadExistingData();
+    _loadExistingData(); // Firestore'dan mevcut verileri yükle
   }
 
+  // Firestore'dan mevcut kullanıcı verilerini alır
   Future<void> _loadExistingData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -40,7 +43,7 @@ class _missinginfoState extends State<missinginfo> {
         _adController.text = data['name'] ?? '';
         _ilController.text = data['province'] ?? '';
         _dogumYeriController.text = data['birthplace'] ?? '';
-        _plakaController.text=data['numberplate'] ?? '';
+        _plakaController.text = data['numberplate'] ?? '';
         if (data['date'] != null) {
           try {
             selectedDate = DateTime.parse(data['date']);
@@ -48,18 +51,19 @@ class _missinginfoState extends State<missinginfo> {
             print("Doğum tarihi formatı hatası: $e");
           }
         }
-        setState(() {});
+        setState(() {}); // UI'yi güncelle
       }
     }
   }
 
-
+  // Tarih seçildiğinde çağrılır
   void onDateSelected(DateTime date) {
     setState(() {
       selectedDate = date;
     });
   }
 
+  // Kaydet butonuna basıldığında çağrılır
   void _saveInfo() async {
     final name = _adController.text;
     final province = _ilController.text;
@@ -67,6 +71,7 @@ class _missinginfoState extends State<missinginfo> {
     final numberplate = _plakaController.text;
     final birthDate = selectedDate.toIso8601String();
 
+    // Tüm alanların dolu olup olmadığını kontrol et
     if (name.isEmpty || province.isEmpty || birthplace.isEmpty || numberplate.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lütfen tüm alanları doldurun.')),
@@ -78,6 +83,7 @@ class _missinginfoState extends State<missinginfo> {
     if (user == null) return;
 
     try {
+      // Firestore'a verileri kaydet
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'name': name,
         'province': province,
@@ -85,8 +91,9 @@ class _missinginfoState extends State<missinginfo> {
         'date': birthDate,
         'numberplate': numberplate,
         'email': user.email ?? '',
-      }, SetOptions(merge: true));
+      }, SetOptions(merge: true)); // Var olan verileri ezmeden günceller
 
+      // Verileri yerel veritabanına kaydet (offline kullanım için)
       await LocalDb().insertUser(
         id: user.uid,
         name: name,
@@ -97,6 +104,7 @@ class _missinginfoState extends State<missinginfo> {
         numberplate: numberplate,
       );
 
+      // Supabase'e aynı verileri gönder
       final supabase = Supabase.instance.client;
       await supabase.from('users').insert({
         'id': user.uid,
@@ -110,14 +118,15 @@ class _missinginfoState extends State<missinginfo> {
 
       if (!mounted) return;
 
+      // Profil sayfasına yönlendir
       Navigator.pushNamedAndRemoveUntil(context, '/profile_page', (route) => false);
     } catch (e) {
+      // Hata olursa kullanıcıya bildir
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Bir hata oluştu: $e')),
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -138,6 +147,7 @@ class _missinginfoState extends State<missinginfo> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          // Ad soyad
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             child: MyTextField(
@@ -146,6 +156,7 @@ class _missinginfoState extends State<missinginfo> {
                               textt: "Adınız-Soyadınız",
                             ),
                           ),
+                          // İl
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             child: MyTextField(
@@ -154,6 +165,7 @@ class _missinginfoState extends State<missinginfo> {
                               textt: "Yaşadığınız İl",
                             ),
                           ),
+                          // Plaka
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             child: MyTextField(
@@ -162,6 +174,7 @@ class _missinginfoState extends State<missinginfo> {
                               textt: "Yaşadığınız İl Plaka Kodu",
                             ),
                           ),
+                          // Doğum yeri
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             child: MyTextField(
@@ -170,6 +183,7 @@ class _missinginfoState extends State<missinginfo> {
                               textt: "Doğum Yeri",
                             ),
                           ),
+                          // Doğum tarihi seçimi
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             child: Container(
@@ -190,6 +204,7 @@ class _missinginfoState extends State<missinginfo> {
                               ),
                             ),
                           ),
+                          // Kaydet butonu
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             child: MyButton(
@@ -205,7 +220,6 @@ class _missinginfoState extends State<missinginfo> {
                       ),
                     ),
                   ),
-
                 ],
               ),
             ),
