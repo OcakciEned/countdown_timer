@@ -98,7 +98,7 @@ class AuthRepository {
             'province': '',
             'birthplace': '',
             'date': '',
-            'numberplate':''
+            'numberplate': ''
           });
         }
       }

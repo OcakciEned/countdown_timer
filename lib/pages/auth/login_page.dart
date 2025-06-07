@@ -19,26 +19,7 @@ class LoginPage extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  Future<UserCredential?> signInWithGoogle(BuildContext context) async {
-    try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return null;
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      return await FirebaseAuth.instance.signInWithCredential(credential);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google ile giriş hatası: $e')),
-      );
-      return null;
-    }
-  }
 
   Future<void> signInWithGitHubAndHandle(BuildContext context) async {
     const clientId = 'Ov23liJirU2f6T387Gpu';
@@ -96,21 +77,17 @@ class LoginPage extends StatelessWidget {
       final snapshot = await userDoc.get();
 
       if (!snapshot.exists) {
-        await userDoc.set({
-          'name': user.displayName ?? '',
-          'email': user.email ?? '',
-          'province': '',
-          'birthplace': '',
-          'date': '',
-        });
-        Navigator.pushReplacementNamed(context, '/missing_info');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Kullanıcı Firestore\'da bulunamadı.')),
+        );
         return;
       }
 
       final data = snapshot.data()!;
       final isMissingInfo = (data['province'] ?? '').isEmpty ||
           (data['birthplace'] ?? '').isEmpty ||
-          (data['date'] ?? '').isEmpty;
+          (data['birthDate'] ?? '').isEmpty ||
+          (data['numberplate'] ?? '').isEmpty;
 
       if (isMissingInfo) {
         Navigator.pushReplacementNamed(context, '/missing_info');
@@ -224,39 +201,31 @@ class LoginPage extends StatelessWidget {
                         children: [
                           MyButton(
                             buttonclick: () async {
-                              final userCredential = await signInWithGoogle(context);
+                              final repo = AuthRepository(auth: FirebaseAuth.instance);
+                              final userCredential = await repo.signInWithGoogle();
                               final user = userCredential?.user;
 
-                              if (user != null) {
-                                final userDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
-                                final snapshot = await userDoc.get();
-
-                                if (!snapshot.exists) {
-                                  await userDoc.set({
-                                    'name': user.displayName ?? '',
-                                    'email': user.email ?? '',
-                                    'province': '',
-                                    'birthplace': '',
-                                    'date': '',
-                                  });
-                                  Navigator.pushReplacementNamed(context, '/missing_info');
-                                  return;
-                                }
-
-                                final data = snapshot.data()!;
-                                final isMissingInfo = (data['province'] ?? '').isEmpty ||
-                                    (data['birthplace'] ?? '').isEmpty ||
-                                    (data['date'] ?? '').isEmpty;
-
-                                if (isMissingInfo) {
-                                  Navigator.pushReplacementNamed(context, '/missing_info');
-                                } else {
-                                  Navigator.pushReplacementNamed(context, '/home_page');
-                                }
-                              } else {
+                              if (user == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(content: Text('Google ile giriş başarısız')),
                                 );
+                                return;
+                              }
+
+
+                              final userDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
+                              final snapshot = await userDoc.get();
+                              final data = snapshot.data();
+
+                              final isMissingInfo = (data?['province'] ?? '').isEmpty ||
+                                  (data?['birthplace'] ?? '').isEmpty ||
+                                  (data?['birthDate'] ?? '').isEmpty ||
+                                  (data?['numberplate']??'').isEmpty;
+
+                              if (isMissingInfo) {
+                                Navigator.pushReplacementNamed(context, '/missing_info');
+                              } else {
+                                Navigator.pushReplacementNamed(context, '/home_page');
                               }
                             },
                             buttontext: "Gmail",
@@ -265,6 +234,7 @@ class LoginPage extends StatelessWidget {
                             height: 40,
                             width: MediaQuery.of(context).size.width * 0.35,
                           ),
+
                           const SizedBox(width: 70),
                           MyButton(
                             buttonclick: () async {
