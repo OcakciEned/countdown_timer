@@ -86,11 +86,25 @@ class LoginPage extends StatelessWidget {
       // Firestore'da kullanıcı belgesi kontrolü
       final userDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
       final snapshot = await userDoc.get();
+      final data = snapshot.data();
 
+      // Eğer belge yoksa, ilk giriş: yeni kullanıcı için kayıt oluştur
+      if (data == null) {
+        await userDoc.set({
+          'province': '',
+          'birthplace': '',
+          'birthDate': '',
+          'numberplate': '',
+          'email': user.email ?? '',
+          'name': user.displayName ?? '',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
 
+        Navigator.pushReplacementNamed(context, '/missing_info');
+        return;
+      }
 
-      // Kullanıcı bilgilerinin tamam olup olmadığını kontrol et
-      final data = snapshot.data()!;
+      // Kullanıcı bilgilerini kontrol et
       final isMissingInfo = (data['province'] ?? '').isEmpty ||
           (data['birthplace'] ?? '').isEmpty ||
           (data['birthDate'] ?? '').isEmpty ||
@@ -117,6 +131,7 @@ class LoginPage extends StatelessWidget {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
