@@ -57,7 +57,7 @@ class _ProfilePageState extends State<ProfilePage> {
             email: email,
             province: data['province'] ?? '',
             birthPlace: data['birthplace'] ?? '',
-            birthDate: data['date'] ?? '',
+            date: data['date'] ?? '',
             numberplate: data['numberplate'] ?? '',
           );
 
@@ -76,7 +76,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 'email': localUser['email'],
                 'province': localUser['province'],
                 'birthplace': localUser['birthPlace'],
-                'date': localUser['birthDate'],
+                'date': localUser['date'],
                 'numberplate': localUser['numberplate'],
               };
               isLoading = false;
@@ -100,7 +100,7 @@ class _ProfilePageState extends State<ProfilePage> {
               'email': localUser['email'],
               'province': localUser['province'],
               'birthplace': localUser['birthPlace'],
-              'date': localUser['birthDate'],
+              'date': localUser['date'],
               'numberplate': localUser['numberplate'],
             };
             isLoading = false;

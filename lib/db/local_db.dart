@@ -23,7 +23,7 @@ class LocalDb {
             email TEXT,
             province TEXT,
             birthPlace TEXT,
-            birthDate TEXT,
+            date TEXT,
             numberplate TEXT
           )
         ''');
@@ -37,7 +37,7 @@ class LocalDb {
     required String email,
     required String province,
     required String birthPlace,
-    required String birthDate,
+    required String date,
     required String numberplate,
   }) async {
     final db = await database;
@@ -49,7 +49,7 @@ class LocalDb {
         'email': email,
         'province': province,
         'birthPlace': birthPlace,
-        'birthDate': birthDate,
+        'date': date,
         'numberplate': numberplate,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -68,7 +68,7 @@ class LocalDb {
     required String email,
     required String province,
     required String birthPlace,
-    required String birthDate,
+    required String date,
   required String numberplate
   }) async {
     final db = await database;
@@ -79,7 +79,7 @@ class LocalDb {
         'email': email,
         'province': province,
         'birthPlace': birthPlace,
-        'birthDate': birthDate,
+        'date': date,
         'numberplate':numberplate
       },
       where: 'id = ?',

@@ -55,7 +55,7 @@ class _RegisterScreenState extends State<RegisterPage> {
               final province = _ilController.text;
               final birthPlace = _dogumYeriController.text;
               final numberplate = _plakaController.text;
-              final birthDate = selectedDate.toIso8601String();
+              final date = selectedDate.toIso8601String();
 
               // SharedPreferences'a kaydet
               await SharedPreferencesHelper.saveUserInfo(
@@ -71,7 +71,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                 email: email,
                 province: province,
                 birthPlace: birthPlace,
-                birthDate: birthDate,
+                date: date,
                 numberplate: numberplate,
               );
 
@@ -83,7 +83,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                   'name': name,
                   'province': province,
                   'birthPlace': birthPlace,
-                  'birthDate': birthDate,
+                  'date': date,
                   'numberplate': numberplate,
                 });
                 print('Supabase kayıt başarılı');

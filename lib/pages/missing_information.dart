@@ -69,7 +69,7 @@ class _missinginfoState extends State<missinginfo> {
     final province = _ilController.text;
     final birthplace = _dogumYeriController.text;
     final numberplate = _plakaController.text;
-    final birthDate = selectedDate.toIso8601String();
+    final date = selectedDate.toIso8601String();
 
     // Tüm alanların dolu olup olmadığını kontrol et
     if (name.isEmpty || province.isEmpty || birthplace.isEmpty || numberplate.isEmpty) {
@@ -88,7 +88,7 @@ class _missinginfoState extends State<missinginfo> {
         'name': name,
         'province': province,
         'birthplace': birthplace,
-        'date': birthDate,
+        'date': date,
         'numberplate': numberplate,
         'email': user.email ?? '',
       }, SetOptions(merge: true)); // Var olan verileri ezmeden günceller
@@ -100,7 +100,7 @@ class _missinginfoState extends State<missinginfo> {
         email: user.email ?? '',
         province: province,
         birthPlace: birthplace,
-        birthDate: birthDate,
+        date: date,
         numberplate: numberplate,
       );
 
@@ -112,7 +112,7 @@ class _missinginfoState extends State<missinginfo> {
         'name': name,
         'province': province,
         'birthPlace': birthplace,
-        'birthDate': birthDate,
+        'date': date,
         'numberplate': numberplate,
       });
 

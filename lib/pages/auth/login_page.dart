@@ -93,11 +93,10 @@ class LoginPage extends StatelessWidget {
         await userDoc.set({
           'province': '',
           'birthplace': '',
-          'birthDate': '',
+          'date': '',
           'numberplate': '',
           'email': user.email ?? '',
           'name': user.displayName ?? '',
-          'createdAt': FieldValue.serverTimestamp(),
         });
 
         Navigator.pushReplacementNamed(context, '/missing_info');
@@ -107,7 +106,7 @@ class LoginPage extends StatelessWidget {
       // Kullanıcı bilgilerini kontrol et
       final isMissingInfo = (data['province'] ?? '').isEmpty ||
           (data['birthplace'] ?? '').isEmpty ||
-          (data['birthDate'] ?? '').isEmpty ||
+          (data['date'] ?? '').isEmpty ||
           (data['numberplate'] ?? '').isEmpty;
 
       if (isMissingInfo) {
